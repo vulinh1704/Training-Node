@@ -48,9 +48,25 @@ function handlePathPostProduct(path, req, res) {
             addProduct(req, res);
             break;
         case 'edit':
-            // To do
+            editProduct(req, res)
             break;
     }
+}
+
+function editProduct(req, res) {
+    let data = '';
+    req.on('data', chunk => {
+        data += chunk;
+    });
+    req.on('end', () => {
+        const dataForm = qs.parse(data);  // {}
+        let index = listProducts.findIndex((item) => item.id == dataForm.id);
+        listProducts[index] = dataForm;
+        res.writeHead(302, {
+            'Location': '/products/list'
+        });
+        res.end();
+    })
 }
 
 function addProduct(req, res) {
@@ -59,7 +75,8 @@ function addProduct(req, res) {
         data += chunk;
     });
     req.on('end', () => {
-        const dataForm = qs.parse(data);  // {id: 1, name: 'Keo', img: '...'}
+        const dataForm = qs.parse(data);  // { name: 'Keo', img: '...'}
+        dataForm.id = Date.now(); 
         listProducts.push(dataForm);
         res.writeHead(302, {
             'Location': '/products/list'
@@ -85,9 +102,42 @@ function handlePathGetProduct(path, req, res) {
             showFormAdd(req, res);
             break;
         case 'edit':
-            // To do
+            showFormEdit(req, res);
+            break;
+        case 'delete':
+            remove(req, res);
             break;
     }
+}
+
+function showFormEdit(req, res) {
+    let idEdit = +req.url.split("/")[3]; // NaN
+    if (!idEdit) {
+        showError404(req, res);
+        return;
+    }
+    let product = listProducts.find((item) => item.id == idEdit);
+    let html = fs.readFileSync('./views/products/edit.html', {'encoding': 'utf-8'});
+    html = html.replaceAll('{id}', product.id);
+    html = html.replace('{name}', product.name);
+    html = html.replaceAll('{img}', product.img);
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.write(html);
+    return res.end();
+}
+
+
+function remove(req, res) {
+    let idDelete = +req.url.split("/")[3]; // NaN
+    if (!idDelete) {
+        showError404(req, res);
+        return;
+    }
+    listProducts = listProducts.filter((item) => item.id != idDelete);
+    res.writeHead(302, {
+        'Location': '/products/list'
+    });
+    res.end();
 }
 
 
@@ -114,6 +164,8 @@ function showHome(req, res) {
             <td>${item.id}</td>
             <td>${item.name}</td>
             <td><img src='${item.img}'></td>
+            <td><a href="http://localhost:3000/products/delete/${item.id}">Delete</a></td>
+            <td><a href="http://localhost:3000/products/edit/${item.id}">Edit</a></td>
         </tr>
         `
     })
