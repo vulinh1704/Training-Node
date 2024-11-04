@@ -1,7 +1,6 @@
-let http = require('http');
-const path = require('path');
-let fs = require('fs');
-const qs = require('qs');
+import http from 'http';
+import { handlePathGetProduct, handlePathPostProduct } from './src/router/router.js';
+import fs from 'fs';
 
 let listProducts = [
     {
@@ -42,16 +41,7 @@ let server = http.createServer((req, res) => {
 });
 
 
-function handlePathPostProduct(path, req, res) {
-    switch (path) {
-        case 'add':
-            addProduct(req, res);
-            break;
-        case 'edit':
-            editProduct(req, res)
-            break;
-    }
-}
+
 
 function editProduct(req, res) {
     let data = '';
@@ -69,22 +59,6 @@ function editProduct(req, res) {
     })
 }
 
-function addProduct(req, res) {
-    let data = '';
-    req.on('data', chunk => {
-        data += chunk;
-    });
-    req.on('end', () => {
-        const dataForm = qs.parse(data);  // { name: 'Keo', img: '...'}
-        dataForm.id = Date.now(); 
-        listProducts.push(dataForm);
-        res.writeHead(302, {
-            'Location': '/products/list'
-        });
-        res.end();
-    })
-}
-
 
 function showError404(req, res) {
     let html = fs.readFileSync('./views/error/not-found.html');
@@ -93,22 +67,6 @@ function showError404(req, res) {
     return res.end();
 }
 
-function handlePathGetProduct(path, req, res) {
-    switch (path) {
-        case 'list':
-            showHome(req, res);
-            break;
-        case 'add':
-            showFormAdd(req, res);
-            break;
-        case 'edit':
-            showFormEdit(req, res);
-            break;
-        case 'delete':
-            remove(req, res);
-            break;
-    }
-}
 
 function showFormEdit(req, res) {
     let idEdit = +req.url.split("/")[3]; // NaN
@@ -117,7 +75,7 @@ function showFormEdit(req, res) {
         return;
     }
     let product = listProducts.find((item) => item.id == idEdit);
-    let html = fs.readFileSync('./views/products/edit.html', {'encoding': 'utf-8'});
+    let html = fs.readFileSync('./views/products/edit.html', { 'encoding': 'utf-8' });
     html = html.replaceAll('{id}', product.id);
     html = html.replace('{name}', product.name);
     html = html.replaceAll('{img}', product.img);
@@ -153,35 +111,6 @@ function handlePathCategory(path, req, res) {
     }
 }
 
-
-function showHome(req, res) {
-    let html = fs.readFileSync('./views/products/home.html', { encoding: 'utf8' });
-    console.log(html);
-    let textList = ``;
-    listProducts.map((item) => {
-        textList += `
-        <tr>
-            <td>${item.id}</td>
-            <td>${item.name}</td>
-            <td><img src='${item.img}'></td>
-            <td><a href="http://localhost:3000/products/delete/${item.id}">Delete</a></td>
-            <td><a href="http://localhost:3000/products/edit/${item.id}">Edit</a></td>
-        </tr>
-        `
-    })
-    html = html.replace('{list}', textList);
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.write(html);
-    return res.end();
-}
-
-
-function showFormAdd(req, res) {
-    let html = fs.readFileSync('./views/products/add.html');
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.write(html);
-    return res.end();
-}
 
 
 server.listen(3000, () => {
