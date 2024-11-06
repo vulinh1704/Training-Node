@@ -1,6 +1,7 @@
 import http from 'http';
 import { handlePathGetProduct, handlePathPostProduct } from './src/router/router.js';
 import fs from 'fs';
+import { connectDatabase } from './src/config/connectDatabe.js';
 
 let listProducts = [
     {
@@ -10,6 +11,7 @@ let listProducts = [
     }
 ]
 
+connectDatabase();
 let server = http.createServer((req, res) => {
     let arrPath = req.url.split('/');
     console.log(arrPath);

@@ -13,15 +13,15 @@ class ProductController {
         return res.end();
     }
 
-    add = (req, res) => {
+    add = async (req, res) => {
         let data = '';
         req.on('data', chunk => {
             data += chunk;
         });
-        req.on('end', () => {
+        req.on('end', async () => {
             const dataForm = qs.parse(data);
             dataForm.id = Date.now();
-            this.productService.add(dataForm);
+            await this.productService.add(dataForm);
             res.writeHead(302, {
                 'Location': '/products/list'
             });
@@ -30,16 +30,16 @@ class ProductController {
     }
 
 
-    getAll = (req, res) => {
+    getAll = async (req, res) => {
         let html = fs.readFileSync('./views/products/home.html', { encoding: 'utf8' });
         let textList = ``;
-        let listProducts = this.productService.getAll();
+        let listProducts = await this.productService.getAll();
         listProducts.map((item) => {
             textList += `
         <tr>
             <td>${item.id}</td>
-            <td>${item.name}</td>
-            <td><img src='${item.img}'></td>
+            <td>${item.nameProduct}</td>
+            <td><img src='${item.image}'></td>
             <td><a href="http://localhost:3000/products/delete/${item.id}">Delete</a></td>
             <td><a href="http://localhost:3000/products/edit/${item.id}">Edit</a></td>
         </tr>
