@@ -6,8 +6,14 @@ class ProductController {
         this.productService = ProductService;
     }
 
-    showFormAdd(req, res) {
-        let html = fs.readFileSync('./views/products/add.html');
+    showFormAdd = async (req, res) => {
+        let listCategory = await this.productService.getAllCategory();
+        let html = fs.readFileSync('./views/products/add.html', { encoding: 'utf8' });
+        let htmlOptions = '';
+        listCategory.map((item) => {
+            htmlOptions += `<option value="${item.id}">${item.name}</option>`
+        })
+        html = html.replace("{listCategory}", htmlOptions);
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.write(html);
         return res.end();
@@ -29,7 +35,6 @@ class ProductController {
         })
     }
 
-
     getAll = async (req, res) => {
         let html = fs.readFileSync('./views/products/home.html', { encoding: 'utf8' });
         let textList = ``;
@@ -40,6 +45,7 @@ class ProductController {
             <td>${item.id}</td>
             <td>${item.nameProduct}</td>
             <td><img src='${item.image}'></td>
+            <td>${item.categoryName}</td>
             <td><a href="http://localhost:3000/products/delete/${item.id}">Delete</a></td>
             <td><a href="http://localhost:3000/products/edit/${item.id}">Edit</a></td>
         </tr>
